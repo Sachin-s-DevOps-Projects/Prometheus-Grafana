@@ -132,3 +132,54 @@ On the first login, you will be prompted to change the password for the admin ac
    - After entering the URL, click **Save & Test** to save the configuration and verify the connection.
 
 Once the data source is configured, you can start creating dashboards using Prometheus data in Grafana.
+
+## 3. Node Exporter Installation and Configuration
+
+Now, let's move on to Server 2.
+
+### Step 1: Install Node Exporter
+```bash
+~# cd /tmp
+~# curl -LO https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+~# tar -xvf node_exporter-1.6.1.linux-amd64.tar.gz
+~# sudo mv node_exporter-1.6.1.linux-amd64 /usr/local/node_exporter
+```
+### Step 2: Create a Dedicated User and Group for node_exporter:
+```bash
+sudo useradd -rs /bin/false node_exporter
+```
+### Step 3: Create a Systemd Service for Node Exporter
+```bash
+sudo nano /etc/systemd/system/node_exporter.service
+```
+```
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/node_exporter/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+
+```
+### Step 4: Start Node Exporter Service
+```bash
+~# sudo systemctl daemon-reload
+~# sudo systemctl enable node_exporter
+~# sudo systemctl start node_exporter
+```
+### Step 5: Verifications
+1. **Verify Node Exporter Metrics**
+   - To verify if Node Exporter is running correctly, load the following URL:
+   - `http://<server2_ip>:9100/metrics`
+     
+2. **Verify Prometheus Data Collection**
+   - To verify if Prometheus is correctly collecting data from Node Exporter, load the following URL:
+   - `http://<server1_ip>:9090`
+   -  In the Prometheus web console, navigate to Status > Targets. You should see the Node Exporter instance listed there.
